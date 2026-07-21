@@ -40,6 +40,7 @@ class Product(BaseModel):
     rating: Decimal = Field(default=0.0, description="Рейтинг товара")
     category_id: int = Field(..., description="ID категории")
     seller_id: int = Field(..., description="ID продавца")
+    created_at: datetime = Field(..., description="Дата создания товара")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -80,3 +81,11 @@ class ReviewCreate(BaseModel):
     comment: str | None = Field(None, description="Product comment")
     grade: int = Field(..., ge=1, le=5, description="Grade")
 
+
+class ProductList(BaseModel):
+    items: list[Product] = Field(description="Product list")
+    total: int = Field(ge=0, description="Total product count")
+    page: int = Field(ge=1, description="Current page number")
+    page_size: int = Field(ge=1, description="Page size")
+
+    model_config = ConfigDict(from_attributes=True)
