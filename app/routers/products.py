@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, status, HTTPException, Query
-from sqlalchemy import select, update, func
+from sqlalchemy import select, update, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import get_current_seller
@@ -22,6 +22,7 @@ async def get_all_products(
     db: AsyncSession = Depends(get_async_db),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
+    search: str | None = Query(None, min_length=1, description="Search by name"),
     category_id: int | None = Query(None, description="Category ID"),
     min_price: float | None = Query(None, ge=0.0, description="Minimum price"),
     max_price: float | None = Query(None, ge=0.0, description="Maximum number"),
@@ -52,10 +53,21 @@ async def get_all_products(
     if to_date is not None:
         filters.append(ProductModel.created_at <= to_date)
 
+    rank_col = None
+    if search:
+        search_value = search.strip()
+        if search_value:
+            ts_query = func.websearch_to_tsquery('english', search_value)
+            filters.append(ProductModel.tsv.op("@@")(ts_query))
+            rank_col = func.ts_rank_cd(ProductModel.tsv, ts_query).label("rank")
+
     total_stmt = select(func.count()).select_from(ProductModel).where(*filters)
     total = (await db.scalar(total_stmt)) or 0
 
-    products_stmt = select(ProductModel).where(*filters).order_by(ProductModel.id).offset((page - 1) * page_size).limit(page_size)
+    if rank_col is not None:
+        products_stmt = select(ProductModel).where(*filters).order_by(desc(rank_col),ProductModel.id).offset((page - 1) * page_size).limit(page_size)
+    else:
+        products_stmt = select(ProductModel).where(*filters).order_by(ProductModel.id).offset((page - 1) * page_size).limit(page_size)
     items = (await db.scalars(products_stmt)).all()
 
     result = {
