@@ -89,3 +89,33 @@ class ProductList(BaseModel):
     page_size: int = Field(ge=1, description="Page size")
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class CartItemUpdate(BaseModel):
+    quantity: int = Field(ge=1, description="Quantity of product")
+
+
+class CartItemBase(BaseModel):
+    product_id: int = Field(description="Product ID")
+    quantity: int = Field(ge=1, description="Quantity of product")
+
+
+class CartItemCreate(CartItemBase):
+    pass
+
+
+class CartItem(BaseModel):
+    id: int = Field(description="Unique ID")
+    quantity: int = Field(ge=1, description="Quantity of product")
+    product: Product = Field(description="Product information")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class Cart(BaseModel):
+    user_id: int = Field(description="User ID")
+    items: list[CartItem]  = Field(default_factory=list, description="Cart items")
+    total_quantity: int = Field(ge=0, description="Total quantity")
+    total_price: Decimal = Field(ge=0, description="Total price")
+
+    model_config = ConfigDict(from_attributes=True)
