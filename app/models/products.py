@@ -24,6 +24,7 @@ class Product(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
+
     tsv: Mapped[TSVECTOR] = mapped_column(
         TSVECTOR,
         Computed(
@@ -41,6 +42,7 @@ class Product(Base):
     seller: Mapped["User"] = relationship("User", back_populates="products")
     reviews: Mapped[list["Review"]] = relationship("Review", back_populates="product")
     cart_items: Mapped[list["CartItem"]] = relationship("CartItem", back_populates="product", cascade="all, delete-orphan")
+    order_items: Mapped[list["OrderItem"]] = relationship("OrderItem", back_populates="product")
 
     __table_args__ = (
         Index("ix_products_tsv_gin", "tsv", postgresql_using="gin"),

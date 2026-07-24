@@ -119,3 +119,35 @@ class Cart(BaseModel):
     total_price: Decimal = Field(ge=0, description="Total price")
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class OrderItem(BaseModel):
+    id: int = Field(description="OrderItem ID")
+    product_id: int = Field(description="Product ID")
+    quantity: int = Field(ge=1, description="Quantity of product")
+    unit_price: Decimal = Field(ge=0, description="Unit price")
+    total_price: Decimal = Field(ge=0, description="Total price")
+    product: Product | None = Field(None, description="Product information")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class Order(BaseModel):
+    id: int = Field(description="Order ID")
+    user_id: int = Field(description="User ID")
+    status: str = Field(description="Current order status")
+    total_amount: Decimal = Field(ge=0, description="Total amount")
+    created_at: datetime = Field(description="Created datetime")
+    updated_at: datetime = Field(description="Updated datetime")
+    items: list[OrderItem] = Field(default_factory=list, description="Order items")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class OrderList(BaseModel):
+    items: list[OrderItem] = Field(description="Order list")
+    total: int = Field(ge=0, description="Order total")
+    page: int = Field(ge=1, description="Current page number")
+    page_size: int = Field(ge=1, description="Page size")
+
+    model_config = ConfigDict(from_attributes=True)
